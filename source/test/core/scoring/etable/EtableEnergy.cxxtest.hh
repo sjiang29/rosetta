@@ -1195,7 +1195,7 @@ public:
 		for ( Size ii = 8; ii <= 11; ++ii ) etab_energy.prepare_rotamers_for_packing( pose, *rotsets.rotamer_set_for_residue( ii ) );
 		for ( Size ii = 8; ii <= 11; ++ii ) TS_ASSERT( rotsets.rotamer_set_for_residue(ii)->get_trie( etable_method ).get() != 0 );
 
-		Size count_comparisons( 0 );
+		//Size count_comparisons( 0 );
 		for ( Size ii = 8; ii <= 11; ++ii ) {
 			RotamerSet const & iiset = *rotsets.rotamer_set_for_residue( ii );
 			for ( Size jj = ii+1; jj <= 11; ++jj ) {
