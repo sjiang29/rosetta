@@ -575,6 +575,11 @@ sources = {
 	"pilot/josh" : [
 		"motif_loop_build",
 	],
+
+	"pilot/js" :[
+	    "bootcamp",
+	],
+
 	"pilot/jstev" : [
 		#"collect_features",
  	],
