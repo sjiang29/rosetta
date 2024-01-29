@@ -8,7 +8,7 @@ Rosetta is maintained by the RosettaCommons, a collaboration of 50+ academic res
 Rosetta Code
 ============
 
-While the Rosetta source code is published on GitHub, it is not "Open Source" (according to the OSI definition). Most notably, use for commercial purposes requires purchase of a separate license. See LICENSE.md for further information. 
+While the Rosetta source code is published on GitHub, it's not "Open Source" (according to the OSI definition). Most notably, use for commercial purposes requires purchase of a separate license. See LICENSE.md for further information. 
 
 Getting Started Using Rosetta
 ============================
