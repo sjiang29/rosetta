@@ -1210,7 +1210,7 @@ public:
 				EnergyMap emap;
 				for ( Size kk = 1, kk_end = iiset.num_rotamers(); kk <= kk_end; ++kk ) {
 					for ( Size ll = 1, ll_end = jjset.num_rotamers(); ll <= ll_end; ++ll ) {
-						++count_comparisons;
+						//++count_comparisons;
 						emap.zero();
 						etab_energy.residue_pair_energy( *iiset.rotamer( kk ), *jjset.rotamer( ll ), pose, sfxn, emap );
 						temp_table3( ll, kk ) += sfxn.weights().dot( emap );
