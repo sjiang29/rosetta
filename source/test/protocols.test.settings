@@ -83,6 +83,9 @@ sources = {
 		"BranchAngleOptimizer",
 	],
 
+    "bootcamp" : [
+        "FoldTreeFromSS",
+    ],
 	"calc_taskop_movers" : [
 		"ForceDisulfidesMover",
 	],
@@ -642,6 +645,8 @@ sources = {
 	"protein_mpnn" : [
 		"ProteinMPNN",
 	],
+
+
 
 	"qsar/scoring_grid" : [
 		"ClassicGrid",

@@ -50,18 +50,28 @@ int main(int argc, char ** argv) {
     the_observer->pymol().apply( *mypose);
 
 
-    for(int i = 0; i < 5; i++){
-        double uniform_random_number = numeric::random::uniform();
+    int accept_count = 0;
+    int iteration_count = 200;
+    for(int i = 0; i < iteration_count; i++){
+        double uniform_random_number = numeric::random::uniform(); // get a random number in a range [0, 1]
         core::Size randres = uniform_random_number * mypose->total_residue() + 1;//… code here to pick the index of a random residue in the Pose
-        core::Real pert1 = numeric::random::gaussian();//… code here to get a random number
+        core::Real pert1 = numeric::random::gaussian();//… code here to get a random number [-inf, inf]
         core::Real pert2 = numeric::random::gaussian();//… code here to get another random number
         core::Real orig_phi = mypose->phi( randres );
         core::Real orig_psi = mypose->psi( randres );
         mypose->set_phi( randres, orig_phi + pert1 );
         mypose->set_psi( randres, orig_psi + pert2 );
 
-        mc.boltzmann( *mypose);
+        if (mc.boltzmann( *mypose)){
+            accept_count++;
+        }
     }
+
+    double accept_rate = static_cast<double>(accept_count) / iteration_count;
+    double rejection_rate = 1 - accept_rate;
+
+    std::cout << "The accept rate is:" << accept_rate << std::endl;
+
 
     core::pack::task::PackerTaskOP repack_task =
             core::pack::task::TaskFactory::create_packer_task( *mypose );
