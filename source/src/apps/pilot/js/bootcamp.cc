@@ -9,7 +9,13 @@
 #include <core/scoring/ScoreFunction.hh>
 #include <numeric/random/random.hh>
 #include <protocols/moves/MonteCarlo.hh>
-#include <protocols/moves/PyMolMover.hh>
+#include <protocols/moves/PyMOLMover.hh>
+#include <core/pack/task/TaskFactory.hh>
+#include <core/pack/task/PackerTask.hh>
+#include <core/pack/pack_rotamers.hh>
+#include <core/kinematics/MoveMap.hh>
+#include <core/optimization/MinimizerOptions.hh>
+#include <core/optimization/AtomTreeMinimizer.hh>
 
 int main(int argc, char ** argv) {
 
@@ -39,11 +45,14 @@ int main(int argc, char ** argv) {
     //mypose->set_psi( randres, orig_psi + pert2 );
 
 
-    protocols::moves::MonteCarlo mc = protocols::moves::MonteCarlo( *mypose, score, 25);
+    protocols::moves::MonteCarlo mc = protocols::moves::MonteCarlo( *mypose, *sfxn, 1);
+    protocols::moves::PyMOLObserverOP the_observer = protocols::moves::AddPyMOLObserver( *mypose, true, 0 );
+    the_observer->pymol().apply( *mypose);
+
 
     for(int i = 0; i < 5; i++){
         double uniform_random_number = numeric::random::uniform();
-        core::Size randres = uniform_random_number * (mypose->total_residue() + 1);//… code here to pick the index of a random residue in the Pose
+        core::Size randres = uniform_random_number * mypose->total_residue() + 1;//… code here to pick the index of a random residue in the Pose
         core::Real pert1 = numeric::random::gaussian();//… code here to get a random number
         core::Real pert2 = numeric::random::gaussian();//… code here to get another random number
         core::Real orig_phi = mypose->phi( randres );
@@ -51,10 +60,21 @@ int main(int argc, char ** argv) {
         mypose->set_phi( randres, orig_phi + pert1 );
         mypose->set_psi( randres, orig_psi + pert2 );
 
-        mc.boltzmann( *mypose, score);
-
+        mc.boltzmann( *mypose);
     }
 
+    core::pack::task::PackerTaskOP repack_task =
+            core::pack::task::TaskFactory::create_packer_task( *mypose );
+    repack_task->restrict_to_repacking();
+    core::pack::pack_rotamers( *mypose, *sfxn, repack_task );
+
+    core::kinematics::MoveMap mm;
+    mm.set_bb( true );
+    mm.set_chi( true );
+
+    core::optimization::MinimizerOptions min_opts( "lbfgs_armijo_atol", 0.01, true );
+    core::optimization::AtomTreeMinimizer atm;
+    atm.run( *mypose, mm, *sfxn, min_opts );
 
 
     return 0;
