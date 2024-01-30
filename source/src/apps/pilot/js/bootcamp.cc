@@ -8,6 +8,8 @@
 #include <core/scoring/ScoreFunctionFactory.hh>
 #include <core/scoring/ScoreFunction.hh>
 #include <numeric/random/random.hh>
+#include <protocols/moves/MonteCarlo.hh>
+#include <protocols/moves/PyMolMover.hh>
 
 int main(int argc, char ** argv) {
 
@@ -27,15 +29,31 @@ int main(int argc, char ** argv) {
 
     std::cout << "The score of sfxn is:" << score << std::endl;
 
-    double uniform_random_number = numeric::random::uniform();
-    core::Size randres = uniform_random_number * (mypose->total_residue() + 1);//… code here to pick the index of a random residue in the Pose
-    core::Real pert1 = numeric::random::gaussian();//… code here to get a random number
-    core::Real pert2 = numeric::random::gaussian();//… code here to get another random number
-    core::Real orig_phi = mypose->phi( randres );
-    core::Real orig_psi = mypose->psi( randres );
-    mypose->set_phi( randres, orig_phi + pert1 );
-    mypose->set_psi( randres, orig_psi + pert2 );
+    //double uniform_random_number = numeric::random::uniform();
+    //core::Size randres = uniform_random_number * (mypose->total_residue() + 1);//… code here to pick the index of a random residue in the Pose
+    //core::Real pert1 = numeric::random::gaussian();//… code here to get a random number
+    //core::Real pert2 = numeric::random::gaussian();//… code here to get another random number
+    //core::Real orig_phi = mypose->phi( randres );
+    //core::Real orig_psi = mypose->psi( randres );
+    //mypose->set_phi( randres, orig_phi + pert1 );
+    //mypose->set_psi( randres, orig_psi + pert2 );
 
+
+    protocols::moves::MonteCarlo mc = protocols::moves::MonteCarlo( *mypose, score, 25);
+
+    for(int i = 0; i < 5; i++){
+        double uniform_random_number = numeric::random::uniform();
+        core::Size randres = uniform_random_number * (mypose->total_residue() + 1);//… code here to pick the index of a random residue in the Pose
+        core::Real pert1 = numeric::random::gaussian();//… code here to get a random number
+        core::Real pert2 = numeric::random::gaussian();//… code here to get another random number
+        core::Real orig_phi = mypose->phi( randres );
+        core::Real orig_psi = mypose->psi( randres );
+        mypose->set_phi( randres, orig_phi + pert1 );
+        mypose->set_psi( randres, orig_psi + pert2 );
+
+        mc.boltzmann( *mypose, score);
+
+    }
 
 
 
