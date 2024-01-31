@@ -27,6 +27,8 @@
 
 // C++ headers
 #include <core/kinematics/FoldTree.hh>
+#include <core/scoring/dssp/Dssp.hh>
+#include <core/pose/Pose.hh>
 
 //Auto Headers
 #include <core/pack/dunbrack/DunbrackRotamer.hh>
@@ -75,6 +77,29 @@ public:
 
         TS_ASSERT_EQUALS(4, start);
     }
+
+    void test_identify_secondary_structure_spans1() {
+        std::string s = "   EEEEEEE    EEEEEEE         EEEEEEEEE    EEEEEEEEEE   HHHHHH         EEEEEEEEE         EEEEE     ";
+        utility::vector1< std::pair< core::Size, core::Size > > res = identify_secondary_structure_spans(s);
+        // everything is 1-based
+        std::pair< core::Size, core::Size > p = res[1];
+        core::Size start = p.first;
+        core::Size ending = p.second;
+
+        TS_ASSERT_EQUALS(7, res.size());
+    }
+
+    void test_fold_tree_from_dssp_string() {
+        std::string ss = "   EEEEEEE    EEEEEEE         EEEEEEEEE    EEEEEEEEEE   HHHHHH         EEEEEEEEE         EEEEE     ";
+        core::kinematics::FoldTree ft = fold_tree_from_dssp_string(ss);
+
+        int tree_size = ft.size();
+        std::string ft_s = ft.to_string();
+
+        std::cout << "The tree looks like:" << ft_s << std::endl;
+        TS_ASSERT_EQUALS(38, tree_size);
+
+    };
 
     void find_ones_block( utility::vector1< int > const & bitstring ) {
         int start = 0;
@@ -131,7 +156,11 @@ public:
 
     core::kinematics::FoldTree fold_tree_from_dssp_string(std::string ss){
 
+        int ss_start = 1;
+        int ss_end = ss.size();
+
         utility::vector1< std::pair< core::Size, core::Size > > pairs = identify_secondary_structure_spans(ss);
+
         core::kinematics::FoldTree ft;
 
         std::pair< core::Size, core::Size > first_ele = pairs[1];
@@ -141,7 +170,7 @@ public:
         core::Size mid1 = get_middle(start1, ending1);
 
         int jump_count = 1;
-        for( unsigned long i = 2; i != pairs.size(); i++) {
+        for( unsigned long i = 2; i <= pairs.size(); i++) {
             std::pair< core::Size, core::Size > ele = pairs[i];
             std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
 
@@ -157,18 +186,55 @@ public:
             ft.add_edge( mid1, mid3, jump_count++);
         }
 
-        for( unsigned long i = 1; i != pairs.size(); i++) {
+        for( unsigned long i = 1; i <= pairs.size(); i++) {
             std::pair< core::Size, core::Size > ele = pairs[i];
 
             core::Size start2 = ele.first;
             core::Size ending2 = ele.second;
             core::Size mid2 = get_middle(start2, ending2);
 
-            ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
-            ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+            if(i == 1){
+                ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,ss_start, core::kinematics::Edge::PEPTIDE);
+            } else if (i == pairs.size()) {
+                ft.add_edge( mid2,ss_end, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+            } else {
+                ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+            }
+
+
+        }
+
+        for( unsigned long i = 2; i <= pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
+            std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
+
+            core::Size curr_start = ele.first;
+            //core::Size ending2 = ele.second;
+            //core::Size mid2 = get_middle(start2, ending2);
+            // jump from mid residue of first ele to mid residue of all other elements
+            //ft.add_edge( mid1,mid2,jump_count++);
+
+            core::Size prev_ending = prev_ele.second;
+            // jump from mid residue to mid residue of every inter-secondary-gap
+            core::Size mid = get_middle(curr_start, prev_ending);
+            ft.add_edge( mid, prev_ending, core::kinematics::Edge::PEPTIDE);
+            ft.add_edge( mid, curr_start, core::kinematics::Edge::PEPTIDE);
 
         }
         return ft;
+    }
+
+    core::kinematics::FoldTree fold_tree_from_dssp_string(core::pose::Pose const & init_pose){
+        core::scoring::dssp::Dssp dssp = core::scoring::dssp::Dssp(init_pose, false);
+        std::string ss = dssp.get_dssp_secstruct();
+
+        core::kinematics::FoldTree ft = fold_tree_from_dssp_string(ss);
+
+        return ft;
+
     }
 
 
