@@ -1,0 +1,15 @@
+<ROSETTASCRIPTS>
+    <TASKOPERATIONS>
+        <RestrictToRepacking name="rtrp"/>
+    </TASKOPERATIONS>
+    <FILTERS>
+    </FILTERS>
+    <MOVERS>
+        <PackRotamersMover name="pack_rot" task_operations="rtrp"/>
+        <MinMover name="min_mover" bb="1" chi="1" jump="0" tolerance="0.0001"/>
+        <Small name="small_mover" temperature="2.0" nmoves="100" angle_max="10.0" />
+    </MOVERS>
+    <PROTOCOLS>
+        <Add mover_name="min_mover"/>
+    </PROTOCOLS>
+</ROSETTASCRIPTS>
