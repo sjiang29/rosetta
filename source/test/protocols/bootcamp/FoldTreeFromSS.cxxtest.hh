@@ -26,6 +26,7 @@
 #include <core/types.hh>
 
 // C++ headers
+#include <core/kinematics/FoldTree.hh>
 
 //Auto Headers
 #include <core/pack/dunbrack/DunbrackRotamer.hh>
@@ -123,6 +124,54 @@ public:
         }
         return ss_boundaries;
     }
+
+    core::Size get_middle(int start, int end) {
+        return (start + end) / 2;
+    }
+
+    core::kinematics::FoldTree fold_tree_from_dssp_string(std::string ss){
+
+        utility::vector1< std::pair< core::Size, core::Size > > pairs = identify_secondary_structure_spans(ss);
+        core::kinematics::FoldTree ft;
+
+        std::pair< core::Size, core::Size > first_ele = pairs[1];
+        core::Size start1 = first_ele.first;
+        core::Size ending1 = first_ele.second;
+
+        core::Size mid1 = get_middle(start1, ending1);
+
+        int jump_count = 1;
+        for( unsigned long i = 2; i != pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
+            std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
+
+            core::Size start2 = ele.first;
+            core::Size ending2 = ele.second;
+            core::Size mid2 = get_middle(start2, ending2);
+            // jump from mid residue of first ele to mid residue of all other elements
+            ft.add_edge( mid1,mid2,jump_count++);
+
+            core::Size ending3 = prev_ele.second;
+            // jump from mid residue to mid residue of every inter-secondary-gap
+            core::Size mid3 = get_middle(start2, ending3);
+            ft.add_edge( mid1, mid3, jump_count++);
+        }
+
+        for( unsigned long i = 1; i != pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
+
+            core::Size start2 = ele.first;
+            core::Size ending2 = ele.second;
+            core::Size mid2 = get_middle(start2, ending2);
+
+            ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
+            ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+
+        }
+        return ft;
+    }
+
+
 
 
 
