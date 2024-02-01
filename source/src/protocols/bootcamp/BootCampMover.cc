@@ -14,6 +14,8 @@
 // Unit headers
 #include <protocols/bootcamp/BootCampMover.hh>
 #include <protocols/bootcamp/BootCampMoverCreator.hh>
+#include <core/scoring/ScoreFunction.hh>
+#include <core/scoring/ScoreFunctionFactory.hh>
 
 // Core headers
 #include <core/pose/Pose.hh>
@@ -42,7 +44,7 @@ namespace bootcamp {
 
 /// @brief Default constructor
 BootCampMover::BootCampMover():
-	protocols::moves::Mover( BootCampMover::mover_name() )
+	protocols::moves::Mover( "BootCampMover" )
 {
 
 }
@@ -205,6 +207,24 @@ BootCampMover::provide_citation_info(basic::citation_manager::CitationCollection
 		)
 	);
 }
+
+void
+BootCampMover::set_num_iterations_(core::size num_iterations)  { num_iterations_ = num_iterations; }
+
+core::size
+BootCampMover::get_num_iterations_() const { return num_iterations_; }
+
+
+void BootCampMover::score_function( ScoreFunctionOP sf )
+{
+    runtime_assert( sf != nullptr );
+    sfxn_ = sf;
+}
+
+ScoreFunctionOP
+BootCampMover::get_score_function_() const { return sfxn_; }
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

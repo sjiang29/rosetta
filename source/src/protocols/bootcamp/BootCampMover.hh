@@ -45,6 +45,17 @@ public:
 	/// @brief Default constructor
 	BootCampMover();
 
+    /// @brief Constructs a PackRotamersMover with PackerTask  <task>
+    /// evaluated using  <scorefxn>
+    ///
+    /// ScoreFunction  scorefxn   /function to minimize while changine rotamers
+    /// PackerTask     task       /object specifying what to design/pack
+    /// core::Size (int)     nloop      /number of rounds to run packing
+    BootCampMover(
+            ScoreFunctionCOP sfxn_,
+            core::Size num_iterations_;
+    );
+
 	/// @brief Destructor (important for properly forward-declaring smart-pointer members)
 	~BootCampMover() override;
 
