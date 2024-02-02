@@ -96,6 +96,12 @@ public:
 	std::string
 	metric() const override;
 
+    ///@brief setter for atom_type
+    void set_atom_type(std::string atom_type);
+
+    ///@brief getter of atom_type
+    std::string get_atom_type();
+
 	/// @brief This simple metric is unpublished.  It returns sjiang29 as its author.
 	void provide_citation_info(basic::citation_manager::CitationCollectionList & ) const override;
 
@@ -113,6 +119,10 @@ public:
 
 	core::simple_metrics::SimpleMetricOP
 	clone() const override;
+
+private:
+
+    std::string atom_type_;
 
 #ifdef    SERIALIZATION
 public:
