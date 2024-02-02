@@ -5,123 +5,90 @@
 #include <core/kinematics/FoldTree.hh>
 #include <core/scoring/dssp/Dssp.hh>
 #include <core/pose/Pose.hh>
+#include <protocols/loops/loop>
 
 
-utility::vector1< std::pair< core::Size, core::Size > >
-identify_secondary_structure_spans( std::string const & ss_string )
-{
-    utility::vector1< std::pair< core::Size, core::Size > > ss_boundaries;
-    core::Size strand_start = -1;
-    for ( core::Size ii = 0; ii < ss_string.size(); ++ii ) {
-        if ( ss_string[ ii ] == 'E' || ss_string[ ii ] == 'H'  ) {
-            if ( int( strand_start ) == -1 ) {
-                strand_start = ii;
-            } else if ( ss_string[ii] != ss_string[strand_start] ) {
-                ss_boundaries.push_back( std::make_pair( strand_start+1, ii ) );
-                strand_start = ii;
-            }
-        } else {
-            if ( int( strand_start ) != -1 ) {
-                ss_boundaries.push_back( std::make_pair( strand_start+1, ii ) );
-                strand_start = -1;
-            }
-        }
-    }
-    if ( int( strand_start ) != -1 ) {
-        // last residue was part of a ss-eleemnt
-        ss_boundaries.push_back( std::make_pair( strand_start+1, ss_string.size() ));
-    }
-    for ( core::Size ii = 1; ii <= ss_boundaries.size(); ++ii ) {
-        std::cout << "SS Element " << ii << " from residue "
-                  << ss_boundaries[ ii ].first << " to "
-                  << ss_boundaries[ ii ].second << std::endl;
-    }
-    return ss_boundaries;
-}
+namespace protocols{
+namespace  bootcamp{
 
-core::size get_middle(int start, int end) {
-    return (start + end) / 2;
-}
 
-core::kinematics::FoldTree fold_tree_from_dssp_string(std::string ss){
-
-    int ss_start = 1;
-    int ss_end = ss.size();
-
-    utility::vector1< std::pair< core::Size, core::Size > > pairs = identify_secondary_structure_spans(ss);
-
-    core::kinematics::FoldTree ft;
-
-    std::pair< core::Size, core::Size > first_ele = pairs[1];
-    core::Size start1 = first_ele.first;
-    core::Size ending1 = first_ele.second;
-
-    core::Size mid1 = get_middle(start1, ending1);
-
-    int jump_count = 1;
-    for( unsigned long i = 2; i <= pairs.size(); i++) {
-        std::pair< core::Size, core::Size > ele = pairs[i];
-        std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
-
-        core::Size start2 = ele.first;
-        core::Size ending2 = ele.second;
-        core::Size mid2 = get_middle(start2, ending2);
-        // jump from mid residue of first ele to mid residue of all other elements
-        ft.add_edge( mid1,mid2,jump_count++);
-
-        core::Size ending3 = prev_ele.second;
-        // jump from mid residue to mid residue of every inter-secondary-gap
-        core::Size mid3 = get_middle(start2, ending3);
-        ft.add_edge( mid1, mid3, jump_count++);
+    FoldTreeFromSS::FoldTreeFromSS(std::string const & ssstring){
+        ft = fold_tree_from_dssp_string(ssstring);
     }
 
-    for( unsigned long i = 1; i <= pairs.size(); i++) {
-        std::pair< core::Size, core::Size > ele = pairs[i];
+    FoldTreeFromSS::~FoldTreeFromSS() = default;
 
-        core::Size start2 = ele.first;
-        core::Size ending2 = ele.second;
-        core::Size mid2 = get_middle(start2, ending2);
+    core::kinematics::FoldTree fold_tree_from_dssp_string(std::string ss){
 
-        if(i == 1){
-            ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
-            ft.add_edge( mid2,ss_start, core::kinematics::Edge::PEPTIDE);
-        } else if (i == pairs.size()) {
-            ft.add_edge( mid2,ss_end, core::kinematics::Edge::PEPTIDE);
-            ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
-        } else {
-            ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
-            ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+        int ss_start = 1;
+        int ss_end = ss.size();
+
+        utility::vector1< std::pair< core::Size, core::Size > > pairs = identify_secondary_structure_spans(ss);
+
+        core::kinematics::FoldTree ft;
+
+        std::pair< core::Size, core::Size > first_ele = pairs[1];
+        core::Size start1 = first_ele.first;
+        core::Size ending1 = first_ele.second;
+
+        core::Size mid1 = get_middle(start1, ending1);
+
+        int jump_count = 1;
+        for( unsigned long i = 2; i <= pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
+            std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
+
+            core::Size start2 = ele.first;
+            core::Size ending2 = ele.second;
+            core::Size mid2 = get_middle(start2, ending2);
+            // jump from mid residue of first ele to mid residue of all other elements
+            ft.add_edge( mid1,mid2,jump_count++);
+
+            core::Size ending3 = prev_ele.second;
+            // jump from mid residue to mid residue of every inter-secondary-gap
+            core::Size mid3 = get_middle(start2, ending3);
+            ft.add_edge( mid1, mid3, jump_count++);
         }
 
+        for( unsigned long i = 1; i <= pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
 
+            core::Size start2 = ele.first;
+            core::Size ending2 = ele.second;
+            core::Size mid2 = get_middle(start2, ending2);
+
+            if(i == 1){
+                ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,ss_start, core::kinematics::Edge::PEPTIDE);
+            } else if (i == pairs.size()) {
+                ft.add_edge( mid2,ss_end, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+            } else {
+                ft.add_edge( mid2,ending2, core::kinematics::Edge::PEPTIDE);
+                ft.add_edge( mid2,start2, core::kinematics::Edge::PEPTIDE);
+            }
+
+
+        }
+
+        for( unsigned long i = 2; i <= pairs.size(); i++) {
+            std::pair< core::Size, core::Size > ele = pairs[i];
+            std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
+
+            core::Size curr_start = ele.first;
+            //core::Size ending2 = ele.second;
+            //core::Size mid2 = get_middle(start2, ending2);
+            // jump from mid residue of first ele to mid residue of all other elements
+            //ft.add_edge( mid1,mid2,jump_count++);
+
+            core::Size prev_ending = prev_ele.second;
+            // jump from mid residue to mid residue of every inter-secondary-gap
+            core::Size mid = get_middle(curr_start, prev_ending);
+            ft.add_edge( mid, prev_ending, core::kinematics::Edge::PEPTIDE);
+            ft.add_edge( mid, curr_start, core::kinematics::Edge::PEPTIDE);
+
+        }
+        return ft;
     }
-
-    for( unsigned long i = 2; i <= pairs.size(); i++) {
-        std::pair< core::Size, core::Size > ele = pairs[i];
-        std::pair< core::Size, core::Size > prev_ele = pairs[i-1];
-
-        core::Size curr_start = ele.first;
-        //core::Size ending2 = ele.second;
-        //core::Size mid2 = get_middle(start2, ending2);
-        // jump from mid residue of first ele to mid residue of all other elements
-        //ft.add_edge( mid1,mid2,jump_count++);
-
-        core::Size prev_ending = prev_ele.second;
-        // jump from mid residue to mid residue of every inter-secondary-gap
-        core::Size mid = get_middle(curr_start, prev_ending);
-        ft.add_edge( mid, prev_ending, core::kinematics::Edge::PEPTIDE);
-        ft.add_edge( mid, curr_start, core::kinematics::Edge::PEPTIDE);
-
-    }
-    return ft;
 }
-
-core::kinematics::FoldTree fold_tree_from_dssp_string(core::pose::Pose const & init_pose){
-    core::scoring::dssp::Dssp dssp = core::scoring::dssp::Dssp(init_pose, false);
-    std::string ss = dssp.get_dssp_secstruct();
-
-    core::kinematics::FoldTree ft = fold_tree_from_dssp_string(ss);
-
-    return ft;
-
 }

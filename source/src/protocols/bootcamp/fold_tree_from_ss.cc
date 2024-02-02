@@ -3,6 +3,10 @@
 #include <core/scoring/dssp/Dssp.hh>
 #include <core/pose/Pose.hh>
 
+#include <protocols/loops/loop>
+
+
+
 utility::vector1< std::pair< core::Size, core::Size > >
 identify_secondary_structure_spans( std::string const & ss_string )
 {
