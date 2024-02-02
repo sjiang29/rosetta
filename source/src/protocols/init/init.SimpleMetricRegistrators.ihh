@@ -30,6 +30,8 @@ static SimpleMetricRegistrator< core::simple_metrics::metrics::DihedralDistanceM
 
 static SimpleMetricRegistrator< core::simple_metrics::metrics::InteractionEnergyMetricCreator > reg_InteractionEnergyMetricCreator;
 
+static SimpleMetricRegistrator< core::simple_metrics::metrics::PerResidueBfactorMetricCreator > reg_PerResidueBfactorMetricCreator;
+
 static SimpleMetricRegistrator< core::simple_metrics::metrics::ResidueSummaryMetricCreator > reg_ResidueSummaryMetricCreator;
 
 static SimpleMetricRegistrator< core::simple_metrics::metrics::RMSDMetricCreator             > reg_RMSDMetricCreator;
